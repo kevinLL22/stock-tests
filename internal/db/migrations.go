@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/kevinLL22/stock-tests/migrations"
+	"log"
 
 	"github.com/golang-migrate/migrate/v4"
 	crdb "github.com/golang-migrate/migrate/v4/database/cockroachdb"
@@ -11,8 +12,8 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func runMigrations(databaseURL string) error {
-	// 1. Fuente de datos: archivos embebidos (iofs)
+func RunMigrations(databaseURL string) error {
+	// 1. source: migrations embedded in the binary
 	src, err := iofs.New(migrations.FS, ".")
 	if err != nil {
 		return fmt.Errorf("iofs: %w", err)
@@ -28,7 +29,7 @@ func runMigrations(databaseURL string) error {
 		return fmt.Errorf("crdb driver: %w", err)
 	}
 
-	// 3. Ejecutar
+	// 3. Execute migrations
 	m, err := migrate.NewWithInstance("iofs", src, "cockroachdb", driver)
 	if err != nil {
 		return fmt.Errorf("migrate instance: %w", err)
@@ -36,6 +37,16 @@ func runMigrations(databaseURL string) error {
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
 		return fmt.Errorf("apply: %w", err)
 	}
+
+	version, dirty, verr := m.Version()
+	if verr != nil {
+		log.Printf("Error to obtain version: %v", verr)
+	} else if dirty {
+		log.Printf("Migrations applid, but in dirty (dirty=true) in version %d", version)
+	} else {
+		log.Printf("Migrations applied. current version: %d", version)
+	}
+
 	return nil
 }
 

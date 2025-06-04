@@ -28,7 +28,7 @@ func NewPool(databaseURL string) (*pgxpool.Pool, error) {
 	}
 
 	//  NEW: aplicar migraciones antes de devolver el pool
-	if err := runMigrations(databaseURL); err != nil {
+	if err := RunMigrations(databaseURL); err != nil {
 		pool.Close()
 		return nil, fmt.Errorf("migrations: %w", err)
 	}

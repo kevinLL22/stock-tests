@@ -6,20 +6,30 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kevinLL22/stock-tests/internal/config"
 	"github.com/kevinLL22/stock-tests/internal/controllers"
+	"github.com/kevinLL22/stock-tests/internal/db"
 	"github.com/kevinLL22/stock-tests/internal/repositories"
 	"github.com/kevinLL22/stock-tests/internal/services"
+	"log"
 )
 
 func main() {
 
 	cfg := config.Load()
 
-	router := gin.Default()
-
 	// inits
 
 	// pool
-	pool, _ := pgxpool.New(context.Background(), cfg.DatabaseURL)
+	pool, err := pgxpool.New(context.Background(), cfg.DatabaseURL)
+	if err != nil {
+		log.Fatal("cannot connect to database", err)
+	}
+	defer pool.Close()
+
+	if err := db.RunMigrations(cfg.DatabaseURL); err != nil {
+		log.Fatal("cannot run migrations", err)
+	}
+
+	router := gin.Default()
 
 	//repos
 	companyRepo := repositories.NewCompanyRepository(pool)
