@@ -10,12 +10,11 @@ import (
 type Config struct {
 	Port        string
 	DatabaseURL string
-	Env         string // dev | prod | test
+	Env         string // mod for environment (dev, test, prod)
 }
 
-// Load lee variables de entorno, aplicando defaults y .env en desarrollo
 func Load() Config {
-	_ = godotenv.Load() // .env es opcional
+	_ = godotenv.Load()
 
 	cfg := Config{
 		Port:        getEnv("PORT", "8080"),
