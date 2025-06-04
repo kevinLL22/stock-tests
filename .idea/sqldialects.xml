@@ -3,6 +3,8 @@
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/internal/repositories/company_repository.go" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/migrations/001_init.up.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/006_insert_ratings_default.up.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/007_insert_action_default.up.sql" dialect="GenericSQL" />
     <file url="PROJECT" dialect="Cockroach" />
   </component>
 </project>
