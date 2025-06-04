@@ -1,11 +1,9 @@
 package main
 
 import (
-	"github.com/kevinLL22/stock-tests/internal/db"
-	"log"
-
+	"context"
 	"github.com/gin-gonic/gin"
-
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kevinLL22/stock-tests/internal/config"
 	"github.com/kevinLL22/stock-tests/internal/controllers"
 	"github.com/kevinLL22/stock-tests/internal/repositories"
@@ -13,29 +11,26 @@ import (
 )
 
 func main() {
-	// 1. Leer configuración (puerto, conexión, etc.)
+
 	cfg := config.Load()
 
-	// 2. Inicializar conexión a CockroachDB (todavía placeholder)
-	pool, err := db.NewPool(cfg.DatabaseURL)
-	if err != nil {
-		log.Fatalf("db init: %v", err)
-	}
-	defer pool.Close()
+	router := gin.Default()
 
-	// 3. Instanciar capa de servicio (repo + URL remota)
-	stockRepo := repositories.NewStockRepository(pool)
-	stockSvc := services.NewStockService(
-		stockRepo,
-		"https://example.com/stocks-endpoint.json", // TODO: move to cfg
-	)
+	// inits
 
-	// 4. Configurar router
-	r := gin.Default()
-	controllers.RegisterRoutes(r, stockSvc)
+	// pool
+	pool, _ := pgxpool.New(context.Background(), cfg.DatabaseURL)
 
-	// 5. Arrancar
-	if err := r.Run(":" + cfg.Port); err != nil {
-		log.Fatalf("server: %v", err)
-	}
+	//repos
+	companyRepo := repositories.NewCompanyRepository(pool)
+
+	//services
+	companySvc := services.NewCompanyService(companyRepo)
+
+	// 3) controllers and routes
+	companyCtrl := controllers.NewCompanyController(companySvc)
+	companyCtrl.RegisterRoutes(router)
+
+	router.Run(":8080")
+
 }
