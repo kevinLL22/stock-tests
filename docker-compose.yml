@@ -1,0 +1,25 @@
+services:
+  db:
+    image: cockroachdb/cockroach:v24.1.0
+    command: start-single-node --insecure
+    ports: ["26257:26257", "8088:8080"]     # UI en :8088
+    volumes: ["cockroach-data:/cockroach/cockroach-data"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health?ready=1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://root@db:26257/defaultdb?sslmode=disable
+      - PORT=8080
+      - ENV=prod
+    ports: ["8080:8080"]
+
+volumes:
+  cockroach-data:
