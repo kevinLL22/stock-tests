@@ -22,11 +22,22 @@ func NewCompanyRepository(db *pgxpool.Pool) CompanyRepository {
 }
 
 func (cRepo CompanyRepo) Upsert(ctx context.Context, companyModel models.Company) error {
-	const query = `
-		UPSERT INTO companies (company_id, ticker, name)
-		VALUES ($1, $2, $3)
-	`
-	_, err := cRepo.db.Exec(ctx, query, companyModel.ID, companyModel.Ticker, companyModel.Name)
+
+	if companyModel.ID == 0 {
+		const insertQuery = `
+            INSERT INTO companies (ticker, name)
+            VALUES ($1, $2)
+            RETURNING company_id
+        `
+		return cRepo.db.QueryRow(ctx, insertQuery, companyModel.Ticker, companyModel.Name).
+			Scan(&companyModel.ID)
+	}
+
+	const updateQuery = `
+        UPSERT INTO companies (company_id, ticker, name)
+        VALUES ($1, $2, $3)
+    `
+	_, err := cRepo.db.Exec(ctx, updateQuery, companyModel.ID, companyModel.Ticker, companyModel.Name)
 	return err
 }
 
